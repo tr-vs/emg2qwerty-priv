@@ -9,7 +9,7 @@ import os
 import pprint
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, Optional
 
 import hydra
 import pytorch_lightning as pl
@@ -24,7 +24,7 @@ log = logging.getLogger(__name__)
 
 
 @hydra.main(version_base=None, config_path="../config", config_name="base")
-def main(config: DictConfig):
+def main(config: DictConfig) -> Dict[str, Any]:
     log.info(f"\nConfig:\n{OmegaConf.to_yaml(config)}")
 
     # Add working dir to PYTHONPATH
@@ -96,6 +96,8 @@ def main(config: DictConfig):
         callbacks=callbacks,
     )
 
+    best_checkpoint_path = None
+    
     if config.train:
         # Check if a past checkpoint exists to resume training from
         checkpoint_dir = Path.cwd().joinpath("checkpoints")
@@ -107,9 +109,9 @@ def main(config: DictConfig):
         trainer.fit(module, datamodule, ckpt_path=resume_from_checkpoint)
 
         # Load best checkpoint
-        module = module.load_from_checkpoint(
-            trainer.checkpoint_callback.best_model_path
-        )
+        best_checkpoint_path = trainer.checkpoint_callback.best_model_path
+        if best_checkpoint_path and os.path.exists(best_checkpoint_path):
+            module = module.load_from_checkpoint(best_checkpoint_path)
 
     # Validate and test on the best checkpoint (if training), or on the
     # loaded `config.checkpoint` (otherwise)
@@ -119,9 +121,15 @@ def main(config: DictConfig):
     results = {
         "val_metrics": val_metrics,
         "test_metrics": test_metrics,
-        "best_checkpoint": trainer.checkpoint_callback.best_model_path,
+        "best_checkpoint": best_checkpoint_path,
     }
     pprint.pprint(results, sort_dicts=False)
+    
+    # Make sure to return the metric value for Optuna
+    return {
+        "metric_value": val_metrics[0][config.monitor_metric],
+        # You can include other metrics or information here
+    }
 
 
 if __name__ == "__main__":

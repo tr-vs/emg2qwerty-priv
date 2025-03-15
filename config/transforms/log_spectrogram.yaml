@@ -25,16 +25,35 @@ specaug:
   n_freq_masks: 2
   freq_mask_param: 4
 
+gaussian_noise:
+  _target_: emg2qwerty.transforms.AddGaussianNoise
+
+random_crop:
+  _target_: emg2qwerty.transforms.RandomCrop
+  crop_size: 500
+
+scaling:
+  _target_: emg2qwerty.transforms.Scaling
+
+reflection:
+  _target_: emg2qwerty.transforms.ReflectionAugmentation
+
 transforms:
   train:
     - ${to_tensor}
+    - ${reflection}
+    # - ${scaling}
     - ${band_rotation}
     - ${temporal_jitter}
+    # - ${random_crop}
     - ${logspec}
     - ${specaug}
+    # - ${gaussian_noise}
 
   val:
     - ${to_tensor}
     - ${logspec}
 
   test: ${transforms.val}
+
+

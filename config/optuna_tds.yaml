@@ -1,0 +1,40 @@
+# Base Configuration
+defaults:
+  - base    # Inherits from base.yaml configuration
+
+# Model Configuration
+model:
+  _target_: emg2qwerty.models.tds_conv_ctc.TDSConvCTC  # Default model class
+
+# Optuna Search Settings
+optuna:
+  n_trials: 20          # Will try 20 different hyperparameter combinations
+  timeout: null         # No time limit for the search
+  pruner:
+    _target_: optuna.pruners.MedianPruner  # Stops unpromising trials early
+    n_startup_trials: 5                     # Number of trials before pruning starts
+    n_warmup_steps: 5                       # Steps before pruning can happen
+    interval_steps: 1                       # How often to check for pruning
+  sampler:
+    _target_: optuna.samplers.TPESampler   # Uses Tree-structured Parzen Estimators
+    seed: ${seed}                          # For reproducibility
+
+# Initial Values (will be tuned by Optuna)
+optimizer:
+  lr: 0.001            # Starting learning rate
+batch_size: 32         # Starting batch size
+monitor_mode: "min"    # Whether to minimize or maximize the metric
+
+
+# Training Settings for Search
+trainer:
+  max_epochs: 16       # Reduced epochs for faster search
+train: True           # Enable training during search
+
+# Search Space Documentation
+hyperparameter_space:
+  lr: [1e-5, 1e-2]                # Log-scale search between these values
+  batch_size: [16, 32, 64, 128]   # Will try these specific values
+  dropout: [0.0, 0.5]             # Uniform search between these values
+  kernel_size: [3, 5, 7, 9]       # Will try these specific kernel sizes
+  warmup_steps: [100, 2000]       # Integer search between these values

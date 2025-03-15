@@ -1,0 +1,15 @@
+# @package _global_
+
+module:
+  _target_: emg2qwerty.lightning.HybridModule
+  in_features: 528  # freq * channels = (n_fft // 2 + 1) * 16
+  mlp_features: [384]
+  block_channels: [24, 24, 24, 24] #(cnn size/number of layers)
+  kernel_width: 16  # Total temporal receptive field of 125 samples given 4 layers
+  hidden_size: 256 # (rnn size) kevin's been using 128 i think - lansh994
+  num_layers: 4 #(rnn num_layers) # set to 2 or 4
+
+datamodule:
+  _target_: emg2qwerty.lightning.WindowedEMGDataModule
+  window_length: 8000  # 4 sec windows for 2kHz EMG
+  padding: [1800, 200]  # 900ms past context, 100ms future context
