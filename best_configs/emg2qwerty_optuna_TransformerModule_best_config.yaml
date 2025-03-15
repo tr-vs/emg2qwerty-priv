@@ -1,0 +1,199 @@
+user: single_user
+dataset:
+  train:
+  - user: 89335547
+    session: 2021-06-03-1622765527-keystrokes-dca-study@1-0efbe614-9ae6-4131-9192-4398359b4f5f
+  - user: 89335547
+    session: 2021-06-02-1622681518-keystrokes-dca-study@1-0efbe614-9ae6-4131-9192-4398359b4f5f
+  - user: 89335547
+    session: 2021-06-04-1622863166-keystrokes-dca-study@1-0efbe614-9ae6-4131-9192-4398359b4f5f
+  - user: 89335547
+    session: 2021-07-22-1627003020-keystrokes-dca-study@1-0efbe614-9ae6-4131-9192-4398359b4f5f
+  - user: 89335547
+    session: 2021-07-21-1626916256-keystrokes-dca-study@1-0efbe614-9ae6-4131-9192-4398359b4f5f
+  - user: 89335547
+    session: 2021-07-22-1627004019-keystrokes-dca-study@1-0efbe614-9ae6-4131-9192-4398359b4f5f
+  - user: 89335547
+    session: 2021-06-05-1622885888-keystrokes-dca-study@1-0efbe614-9ae6-4131-9192-4398359b4f5f
+  - user: 89335547
+    session: 2021-06-02-1622679967-keystrokes-dca-study@1-0efbe614-9ae6-4131-9192-4398359b4f5f
+  - user: 89335547
+    session: 2021-06-03-1622764398-keystrokes-dca-study@1-0efbe614-9ae6-4131-9192-4398359b4f5f
+  - user: 89335547
+    session: 2021-07-21-1626917264-keystrokes-dca-study@1-0efbe614-9ae6-4131-9192-4398359b4f5f
+  - user: 89335547
+    session: 2021-06-05-1622889105-keystrokes-dca-study@1-0efbe614-9ae6-4131-9192-4398359b4f5f
+  - user: 89335547
+    session: 2021-06-03-1622766673-keystrokes-dca-study@1-0efbe614-9ae6-4131-9192-4398359b4f5f
+  - user: 89335547
+    session: 2021-06-04-1622861066-keystrokes-dca-study@1-0efbe614-9ae6-4131-9192-4398359b4f5f
+  - user: 89335547
+    session: 2021-07-22-1627001995-keystrokes-dca-study@1-0efbe614-9ae6-4131-9192-4398359b4f5f
+  - user: 89335547
+    session: 2021-06-05-1622884635-keystrokes-dca-study@1-0efbe614-9ae6-4131-9192-4398359b4f5f
+  - user: 89335547
+    session: 2021-07-21-1626915176-keystrokes-dca-study@1-0efbe614-9ae6-4131-9192-4398359b4f5f
+  val:
+  - user: 89335547
+    session: 2021-06-04-1622862148-keystrokes-dca-study@1-0efbe614-9ae6-4131-9192-4398359b4f5f
+  test:
+  - user: 89335547
+    session: 2021-06-02-1622682789-keystrokes-dca-study@1-0efbe614-9ae6-4131-9192-4398359b4f5f
+  root: /emg2qwerty-priv/data
+to_tensor:
+  _target_: emg2qwerty.transforms.ToTensor
+  fields:
+  - emg_left
+  - emg_right
+band_rotation:
+  _target_: emg2qwerty.transforms.ForEach
+  transform:
+    _target_: emg2qwerty.transforms.RandomBandRotation
+    offsets:
+    - -1
+    - 0
+    - 1
+temporal_jitter:
+  _target_: emg2qwerty.transforms.TemporalAlignmentJitter
+  max_offset: 120
+logspec:
+  _target_: emg2qwerty.transforms.LogSpectrogram
+  n_fft: 64
+  hop_length: 16
+specaug:
+  _target_: emg2qwerty.transforms.SpecAugment
+  n_time_masks: 3
+  time_mask_param: 25
+  n_freq_masks: 2
+  freq_mask_param: 4
+gaussian_noise:
+  _target_: emg2qwerty.transforms.AddGaussianNoise
+random_crop:
+  _target_: emg2qwerty.transforms.RandomCrop
+  crop_size: 500
+time_mask:
+  _target_: emg2qwerty.transforms.TimeMasking
+  mask_ratio: 0.2
+transforms:
+  train:
+  - _target_: emg2qwerty.transforms.ToTensor
+    fields:
+    - emg_left
+    - emg_right
+  - _target_: emg2qwerty.transforms.ForEach
+    transform:
+      _target_: emg2qwerty.transforms.RandomBandRotation
+      offsets:
+      - -1
+      - 0
+      - 1
+  - _target_: emg2qwerty.transforms.TemporalAlignmentJitter
+    max_offset: 120
+  - _target_: emg2qwerty.transforms.LogSpectrogram
+    n_fft: 64
+    hop_length: 16
+  - _target_: emg2qwerty.transforms.SpecAugment
+    n_time_masks: 3
+    time_mask_param: 25
+    n_freq_masks: 2
+    freq_mask_param: 4
+  val:
+  - _target_: emg2qwerty.transforms.ToTensor
+    fields:
+    - emg_left
+    - emg_right
+  - _target_: emg2qwerty.transforms.LogSpectrogram
+    n_fft: 64
+    hop_length: 16
+  test:
+  - _target_: emg2qwerty.transforms.ToTensor
+    fields:
+    - emg_left
+    - emg_right
+  - _target_: emg2qwerty.transforms.LogSpectrogram
+    n_fft: 64
+    hop_length: 16
+module:
+  _target_: emg2qwerty.lightning.TransformerModule
+  in_features: 528
+  mlp_features:
+  - 384
+  block_channels:
+  - 24
+  - 24
+  - 24
+  - 24
+  kernel_width: 32
+  d_model: 512
+  nhead: 8
+  num_layers: 6
+  dim_feedforward: 2048
+  dropout: 0.1
+datamodule:
+  _target_: emg2qwerty.lightning.WindowedEMGDataModule
+  window_length: 8000
+  padding:
+  - 1800
+  - 200
+optimizer:
+  _target_: torch.optim.Adam
+  lr: 4.941960418203591e-05
+lr_scheduler:
+  scheduler:
+    _target_: pl_bolts.optimizers.lr_scheduler.LinearWarmupCosineAnnealingLR
+    warmup_epochs: 10
+    max_epochs: 16
+    warmup_start_lr: 1.0e-08
+    eta_min: 1.0e-06
+  interval: epoch
+  warmup_steps: 1000
+decoder:
+  _target_: emg2qwerty.decoder.CTCGreedyDecoder
+seed: 1501
+batch_size: 32
+num_workers: 4
+train: true
+checkpoint: null
+monitor_metric: val/CER
+monitor_mode: min
+trainer:
+  accelerator: gpu
+  devices: 1
+  num_nodes: 1
+  max_epochs: 16
+  default_root_dir: /emg2qwerty-priv/logs/2025-03-12/19-18-04
+callbacks:
+- _target_: pytorch_lightning.callbacks.LearningRateMonitor
+- _target_: pytorch_lightning.callbacks.ModelCheckpoint
+  dirpath: /emg2qwerty-priv/logs/2025-03-12/19-18-04/checkpoints
+  monitor: val/CER
+  mode: min
+  save_last: true
+  verbose: true
+optuna:
+  n_trials: 20
+  timeout: null
+  pruner:
+    _target_: optuna.pruners.MedianPruner
+    n_startup_trials: 5
+    n_warmup_steps: 5
+    interval_steps: 1
+  sampler:
+    _target_: optuna.samplers.TPESampler
+    seed: 1501
+hyperparameter_space:
+  lr:
+  - 1.0e-05
+  - 0.001
+  batch_size:
+  - 16
+  - 32
+  - 64
+  - 128
+  hidden_size:
+  - 128
+  - 256
+  - 512
+  num_layers:
+  - 2
+  - 4

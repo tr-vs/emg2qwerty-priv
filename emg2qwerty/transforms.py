@@ -243,3 +243,44 @@ class SpecAugment:
 
         # (..., C, freq, T) -> (T, ..., C, freq)
         return x.movedim(-1, 0)
+
+
+@dataclass
+class AddGaussianNoise:
+    """
+    adds gaussian noise to the input tensor
+    """
+    std: float = 0.1
+    mean: float = 0.0
+
+    def __call__(self, tensor: torch.Tensor) -> torch.Tensor:
+        noise = torch.randn_like(tensor) * self.std + self.mean
+        return tensor + noise
+
+@dataclass
+class RandomCrop:
+    """randomly crops the input tensor"""
+    crop_size: int  
+
+    def __call__(self, tensor: torch.Tensor) -> torch.Tensor:
+        start_idx = np.random.randint(0, tensor.shape[0] - self.crop_size)
+        return tensor[start_idx:start_idx + self.crop_size]
+
+@dataclass
+class ReflectionAugmentation:
+    """applies reflection"""
+
+    axis: int = 0
+
+    def __call__(self, tensor: torch.Tensor) -> torch.Tensor:
+        return torch.flip(tensor, dims=[self.axis])
+
+@dataclass
+class Scaling:
+    """scales by 1.5"""
+
+    scale_factor: float = 1.5
+
+    def __call__(self, tensor: torch.Tensor) -> torch.Tensor:
+        return tensor * self.scale_factor
+

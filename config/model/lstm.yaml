@@ -1,0 +1,14 @@
+# @package _global_
+
+module:
+  _target_: emg2qwerty.lightning.LSTMModule
+  in_features: 528  # freq * channels = (n_fft // 2 + 1) * 16
+  mlp_features: [384]
+  hidden_size: 512 #kevin's been using 128 i think - lansh994
+  num_layers: 4
+  use_checkpoint: True  # Enable checkpointing
+
+datamodule:
+  _target_: emg2qwerty.lightning.WindowedEMGDataModule
+  window_length: 8000  # 4 sec windows for 2kHz EMG
+  padding: [1800, 200]  # 900ms past context, 100ms future context

@@ -1,0 +1,18 @@
+# @package _global_
+
+module:
+  _target_: emg2qwerty.lightning.TransformerModule
+  in_features: 528  # freq * channels = (n_fft // 2 + 1) * 16
+  mlp_features: [384]
+  block_channels: [24, 24, 24, 24]
+  kernel_width: 32  # Total temporal receptive field of 125 samples given 4 layers
+  d_model: 512 #dimension of the transformer thang
+  nhead: 8 #number of "attention heads"
+  num_layers: 2
+  dim_feedforward: 2048
+  dropout: 0.3
+
+datamodule:
+  _target_: emg2qwerty.lightning.WindowedEMGDataModule
+  window_length: 8000  # 4 sec windows for 2kHz EMG
+  padding: [1800, 200]  # 900ms past context, 100ms future context
